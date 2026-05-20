@@ -1,4 +1,4 @@
-﻿# EventMaster (Task 21)
+﻿# EventMaster
 
 EventMaster is a microservice platform for planning, promoting, and running events with ticket sales, attendee operations, sponsor management, and organizer analytics.
 
@@ -48,7 +48,7 @@ eventmaster/
 
 ## Run locally
 ```bash
-cd d:\Шарага\Кинжа8\Task_21_EventMaster
+cd 'your/project/folder'
 docker compose up --build -d
 ```
 
