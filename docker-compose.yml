@@ -1,0 +1,158 @@
+﻿services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: eventmaster-api-gateway
+    env_file: .env
+    ports:
+      - "32025:8400"
+    depends_on:
+      - event-service
+      - ticket-service
+      - payment-service
+      - attendee-service
+      - sponsor-service
+      - analytics-service
+      - notification-service
+    networks: [eventmaster-net]
+
+  event-service:
+    build:
+      context: .
+      dockerfile: event-service/Dockerfile
+    container_name: eventmaster-event
+    env_file: .env
+    ports:
+      - "32026:8401"
+    depends_on:
+      - postgres
+      - redis
+    networks: [eventmaster-net]
+
+  ticket-service:
+    build:
+      context: .
+      dockerfile: ticket-service/Dockerfile
+    container_name: eventmaster-ticket
+    env_file: .env
+    ports:
+      - "32027:8402"
+    depends_on:
+      - event-service
+      - redis
+    networks: [eventmaster-net]
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: eventmaster-payment
+    env_file: .env
+    ports:
+      - "32028:8403"
+    depends_on:
+      - redis
+    networks: [eventmaster-net]
+
+  attendee-service:
+    build:
+      context: .
+      dockerfile: attendee-service/Dockerfile
+    container_name: eventmaster-attendee
+    env_file: .env
+    ports:
+      - "32029:8404"
+    depends_on:
+      - postgres
+    networks: [eventmaster-net]
+
+  sponsor-service:
+    build:
+      context: .
+      dockerfile: sponsor-service/Dockerfile
+    container_name: eventmaster-sponsor
+    env_file: .env
+    ports:
+      - "32030:8405"
+    depends_on:
+      - postgres
+    networks: [eventmaster-net]
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: analytics-service/Dockerfile
+    container_name: eventmaster-analytics
+    env_file: .env
+    ports:
+      - "32031:8406"
+    depends_on:
+      - postgres
+      - redis
+    networks: [eventmaster-net]
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: eventmaster-notification
+    env_file: .env
+    ports:
+      - "32032:8407"
+    depends_on:
+      - redis
+    networks: [eventmaster-net]
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: eventmaster-celery-worker
+    env_file: .env
+    command: celery -A app.celery_app.celery_app worker --loglevel=info --pool=solo
+    depends_on:
+      - notification-service
+      - redis
+    networks: [eventmaster-net]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_GATEWAY_URL: http://localhost:32025
+    container_name: eventmaster-frontend
+    env_file: .env
+    ports:
+      - "32033:5177"
+    depends_on:
+      - api-gateway
+    networks: [eventmaster-net]
+
+  postgres:
+    image: postgres:16
+    container_name: eventmaster-postgres
+    environment:
+      POSTGRES_DB: eventmaster
+      POSTGRES_USER: eventmaster
+      POSTGRES_PASSWORD: eventmaster
+    ports:
+      - "32034:5432"
+    volumes:
+      - eventmaster_postgres_data:/var/lib/postgresql/data
+    networks: [eventmaster-net]
+
+  redis:
+    image: redis:7
+    container_name: eventmaster-redis
+    ports:
+      - "6393:6379"
+    networks: [eventmaster-net]
+
+networks:
+  eventmaster-net:
+    driver: bridge
+
+volumes:
+  eventmaster_postgres_data:
