@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -204,13 +204,6 @@ async def list_events(
     return {"items": items, "count": len(items)}
 
 
-@app.get("/events/{event_id}")
-async def get_event(event_id: str, actor_role: Role = Role.ATTENDEE) -> dict[str, Any]:
-    _assert_permission(actor_role, "event:read")
-    event = events.get(event_id)
-    if event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return event.model_dump(mode="json")
 
 
 @app.post("/events")
@@ -372,3 +365,12 @@ async def shard_distribution() -> dict[str, Any]:
 async def get_audit(limit: int = 100, actor_role: Role = Role.ADMIN) -> dict[str, Any]:
     _assert_permission(actor_role, "audit:read")
     return {"items": audit_log[-limit:]}
+
+
+@app.get("/events/{event_id}")
+async def get_event(event_id: str, actor_role: Role = Role.ATTENDEE) -> dict[str, Any]:
+    _assert_permission(actor_role, "event:read")
+    event = events.get(event_id)
+    if event is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return event.model_dump(mode="json")
